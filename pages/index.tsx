@@ -58,7 +58,7 @@ const TRANSLATIONS = {
 // Flaggen für Sprachauswahl
 const LANG_FLAGS: { [key: string]: string } = {
   de: "🇩🇪",
-  en: "🇺🇸",
+  en: "🇬🇧",
   tr: "🇹🇷",
 };
 

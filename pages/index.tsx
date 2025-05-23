@@ -335,10 +335,9 @@ export default function Home() {
                 transition: "background .23s",
               }}
               title={t.mode}
-            >
               {dark ? "🌙" : "☀️"}
-            </button>
-            <button
+              </button>
+              <button
               onClick={isFull ? exitFullscreen : enterFullscreen}
               title={isFull ? t.exitFullscreen : t.fullscreen}
               style={{

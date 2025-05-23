@@ -18,10 +18,12 @@ const TRANSLATIONS = {
     fullscreen: "Vollbild",
     exitFullscreen: "Vollbild verlassen",
     base: "Basis",
-    goldTab: "Goldpreise",
-    ratesTab: "Wechselkurse",
-    loadingGold: "Lade Goldpreise...",
-    goldError: "Fehler beim Laden der Goldpreise",
+    metalsTab: "Edelmetalle",
+    currenciesTab: "Währungen",
+    gold: "Gold",
+    silver: "Silber",
+    price: "Preis",
+    errorLoading: "Fehler beim Laden",
   },
   en: {
     appName: "HaremFX",
@@ -39,10 +41,12 @@ const TRANSLATIONS = {
     fullscreen: "Fullscreen",
     exitFullscreen: "Exit fullscreen",
     base: "Base",
-    goldTab: "Gold Prices",
-    ratesTab: "Exchange Rates",
-    loadingGold: "Loading gold prices...",
-    goldError: "Error loading gold prices",
+    metalsTab: "Metals",
+    currenciesTab: "Currencies",
+    gold: "Gold",
+    silver: "Silver",
+    price: "Price",
+    errorLoading: "Error loading",
   },
   tr: {
     appName: "HaremFX",
@@ -60,10 +64,12 @@ const TRANSLATIONS = {
     fullscreen: "Tam Ekran",
     exitFullscreen: "Tam Ekrandan Çık",
     base: "Baz",
-    goldTab: "Altın Fiyatları",
-    ratesTab: "Döviz Kurları",
-    loadingGold: "Altın fiyatları yükleniyor...",
-    goldError: "Altın fiyatları yüklenirken hata oluştu",
+    metalsTab: "Metaller",
+    currenciesTab: "Dövizler",
+    gold: "Altın",
+    silver: "Gümüş",
+    price: "Fiyat",
+    errorLoading: "Yükleme hatası",
   },
 };
 
@@ -76,7 +82,7 @@ const LANG_FLAGS: { [key in keyof typeof TRANSLATIONS]: string } = {
 
 // Währungen + Flaggen
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" },
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" }, // USA Flagge
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
@@ -84,11 +90,10 @@ const CURRENCIES = [
   { code: "TRY", name: { de: "Türkische Lira", en: "Turkish Lira", tr: "Türk Lirası" }, flag: "🇹🇷" },
 ];
 
-// API Key hier eintragen
-const RAPIDAPI_KEY = "DEIN_RAPIDAPI_KEY";
-
 const APP_ID = "c8a594d6cc68451e8734188995aa419e";
 const BASES = ["TRY", "EUR", "USD"];
+
+const RAPIDAPI_KEY = "3946c9ebe3msh1ff9e0b58cbb0dcp13b2e0jsnfccd1719850f";
 
 const formatRate = (rate: number) => (rate >= 10 ? rate.toFixed(3) : rate.toFixed(4));
 
@@ -123,8 +128,6 @@ export default function Home() {
   const [dark, setDark] = useState(true);
   const [isFull, setIsFull] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  // Wechselkurs states
   const [base, setBase] = useState("TRY");
   const [rates, setRates] = useState<{ [key: string]: number }>({});
   const [prevRates, setPrevRates] = useState<{ [key: string]: number }>({});
@@ -132,27 +135,22 @@ export default function Home() {
   const [timestamp, setTimestamp] = useState<string>("");
   const [history, setHistory] = useState<{ [key: string]: number[] }>({});
   const blinkTimeouts = useRef<{ [key: string]: any }>({});
-
-  // Rechner states
   const [from, setFrom] = useState("EUR");
   const [to, setTo] = useState("TRY");
   const [fromValue, setFromValue] = useState("1");
   const [toValue, setToValue] = useState("");
-
-  // Datum
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [isLoading, setIsLoading] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
-  // Goldpreis states
-  const [goldData, setGoldData] = useState<any[]>([]);
+  // Tab State: Währungen oder Edelmetalle
+  const [activeTab, setActiveTab] = useState<"currencies" | "metals">("currencies");
+
+  // Gold & Silber State
+  const [goldData, setGoldData] = useState<{ name: string; price: number; currency: string }[]>([]);
   const [loadingGold, setLoadingGold] = useState(false);
-  const [errorGold, setErrorGold] = useState<string | null>(null);
+  const [errorGold, setErrorGold] = useState("");
 
-  // Aktiver Tab
-  const [tab, setTab] = useState<"rates" | "gold">("rates");
-
-  // Mobile check
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 600);
@@ -161,13 +159,13 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Copy rate Funktion
+  // Copy rate to clipboard
   function copyRate(code: string, rate: number) {
     const msg = `1 ${code} = ${formatRate(rate)} ${base}`;
     navigator.clipboard.writeText(msg);
   }
 
-  // Fullscreen
+  // Fullscreen functions
   function enterFullscreen() {
     if (rootRef.current?.requestFullscreen) {
       rootRef.current.requestFullscreen();
@@ -189,7 +187,7 @@ export default function Home() {
     };
   }, []);
 
-  // Fetch Wechselkurse
+  // Fetch exchange rates
   async function fetchRates(dateStr?: string) {
     setIsLoading(true);
     let url = `https://openexchangerates.org/api/latest.json?app_id=${APP_ID}`;
@@ -231,13 +229,43 @@ export default function Home() {
     setIsLoading(false);
   }
 
+  // Fetch gold prices from RapidAPI
+  async function fetchGoldPrices() {
+    setLoadingGold(true);
+    setErrorGold("");
+    try {
+      const response = await fetch("https://metals-api.p.rapidapi.com/latest", {
+        method: "GET",
+        headers: {
+          "X-RapidAPI-Key": RAPIDAPI_KEY,
+          "X-RapidAPI-Host": "metals-api.p.rapidapi.com",
+        },
+      });
+      const data = await response.json();
+      const items = [
+        { name: t.gold, price: data.rates.XAU, currency: data.base },
+        { name: t.silver, price: data.rates.XAG, currency: data.base },
+      ];
+      setGoldData(items);
+    } catch (error) {
+      setErrorGold(t.errorLoading);
+    } finally {
+      setLoadingGold(false);
+    }
+  }
+
+  // Load data
   useEffect(() => {
     fetchRates(date);
-    const interval = setInterval(() => fetchRates(date), 2000);
+    fetchGoldPrices();
+    const interval = setInterval(() => {
+      fetchRates(date);
+      if (activeTab === "metals") fetchGoldPrices();
+    }, 2000);
     return () => clearInterval(interval);
-  }, [date, base]);
+  }, [date, base, activeTab]);
 
-  // Rechner Logik
+  // Calculate conversion result
   useEffect(() => {
     if (!rates[from] || !rates[to]) {
       setToValue("");
@@ -249,38 +277,14 @@ export default function Home() {
     else setToValue((fVal * result).toFixed(4));
   }, [fromValue, from, to, rates]);
 
+  // Swap currencies
   function swap() {
     setFrom(to);
     setTo(from);
     setFromValue(toValue || "1");
   }
 
-  // Fetch Goldpreise
-  async function fetchGoldData() {
-    setLoadingGold(true);
-    setErrorGold(null);
-    try {
-      const res = await fetch("https://harem-altin-live-gold-price-data.p.rapidapi.com/api/v1/latest", {
-        method: "GET",
-        headers: {
-          "X-RapidAPI-Key": RAPIDAPI_KEY,
-          "X-RapidAPI-Host": "harem-altin-live-gold-price-data.p.rapidapi.com",
-        },
-      });
-      const data = await res.json();
-      setGoldData(data);
-    } catch (error) {
-      setErrorGold(t.goldError);
-    } finally {
-      setLoadingGold(false);
-    }
-  }
-
-  useEffect(() => {
-    if (tab === "gold") fetchGoldData();
-  }, [tab]);
-
-  // Styles
+  // Styling vars
   const bg = dark
     ? "radial-gradient(ellipse at 70% 0,#232141 0,#28246b 70%,#141228 100%)"
     : "radial-gradient(ellipse at 80% 0,#f1f1ff 0,#e0e0ff 80%,#f7f9fc 100%)";
@@ -328,50 +332,10 @@ export default function Home() {
             display: "flex",
             gap: 12,
             alignItems: "center",
-            marginBottom: 16,
+            marginBottom: -8,
             flexWrap: "wrap",
           }}
         >
-          {/* Tab Auswahl */}
-          <button
-            onClick={() => setTab("rates")}
-            style={{
-              background: tab === "rates" ? "#6865ff" : "rgba(225,225,245,0.13)",
-              color: dark ? "#fff" : "#312e67",
-              border: "none",
-              padding: "6px 16px",
-              borderRadius: 12,
-              fontWeight: 600,
-              fontSize: 16,
-              cursor: "pointer",
-              outline: "none",
-              letterSpacing: 1,
-              boxShadow: tab === "rates" ? "0 2px 10px #7c7cff40" : undefined,
-              transition: "background .22s",
-            }}
-          >
-            {t.ratesTab}
-          </button>
-          <button
-            onClick={() => setTab("gold")}
-            style={{
-              background: tab === "gold" ? "#6865ff" : "rgba(225,225,245,0.13)",
-              color: dark ? "#fff" : "#312e67",
-              border: "none",
-              padding: "6px 16px",
-              borderRadius: 12,
-              fontWeight: 600,
-              fontSize: 16,
-              cursor: "pointer",
-              outline: "none",
-              letterSpacing: 1,
-              boxShadow: tab === "gold" ? "0 2px 10px #7c7cff40" : undefined,
-              transition: "background .22s",
-            }}
-          >
-            {t.goldTab}
-          </button>
-
           {/* Sprache mit Flaggen */}
           {(Object.keys(LANG_FLAGS) as (keyof typeof LANG_FLAGS)[]).map((l) => (
             <button
@@ -390,7 +354,6 @@ export default function Home() {
                 letterSpacing: 1,
                 boxShadow: lang === l ? "0 2px 10px #7c7cff40" : undefined,
                 transition: "background .22s",
-                marginLeft: 10,
               }}
               aria-label={`Sprache ${l.toUpperCase()}`}
             >
@@ -445,73 +408,112 @@ export default function Home() {
           </button>
 
           {/* Basis-Währung */}
-          {tab === "rates" && (
-            <>
-              <span
-                style={{
-                  marginLeft: 17,
-                  color: subcolor,
-                  fontSize: 15,
-                  fontWeight: 600,
-                }}
-              >
-                {t.base}:
-              </span>
-              {BASES.map((b) => (
-                <button
-                  key={b}
-                  onClick={() => setBase(b)}
-                  style={{
-                    background: base === b ? "#40eea7" : "rgba(220,230,235,0.15)",
-                    color: base === b ? "#212" : subcolor,
-                    border: "none",
-                    padding: "5px 13px",
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    fontSize: 15,
-                    cursor: "pointer",
-                    marginLeft: 3,
-                    boxShadow: base === b ? "0 2px 7px #31ffc86b" : undefined,
-                    transition: "background .16s",
-                  }}
-                  aria-label={`Basiswährung ${b}`}
-                >
-                  {b}
-                </button>
-              ))}
-            </>
-          )}
+          <span
+            style={{
+              marginLeft: 17,
+              color: subcolor,
+              fontSize: 15,
+              fontWeight: 600,
+            }}
+          >
+            {t.base}:
+          </span>
+          {BASES.map((b) => (
+            <button
+              key={b}
+              onClick={() => setBase(b)}
+              style={{
+                background: base === b ? "#40eea7" : "rgba(220,230,235,0.15)",
+                color: base === b ? "#212" : subcolor,
+                border: "none",
+                padding: "5px 13px",
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: 15,
+                cursor: "pointer",
+                marginLeft: 3,
+                boxShadow: base === b ? "0 2px 7px #31ffc86b" : undefined,
+                transition: "background .16s",
+              }}
+              aria-label={`Basiswährung ${b}`}
+            >
+              {b}
+            </button>
+          ))}
+
+          {/* Tab Wechsel */}
+          <button
+            onClick={() => setActiveTab("currencies")}
+            style={{
+              marginLeft: 30,
+              background: activeTab === "currencies" ? "#6865ff" : "rgba(225,225,245,0.13)",
+              color: dark ? "#fff" : "#312e67",
+              border: "none",
+              padding: "6px 16px",
+              borderRadius: 12,
+              fontWeight: 600,
+              fontSize: 16,
+              cursor: "pointer",
+              outline: "none",
+              letterSpacing: 1,
+              boxShadow: activeTab === "currencies" ? "0 2px 10px #7c7cff40" : undefined,
+              transition: "background .22s",
+            }}
+            aria-label={t.currenciesTab}
+          >
+            {t.currenciesTab}
+          </button>
+          <button
+            onClick={() => setActiveTab("metals")}
+            style={{
+              background: activeTab === "metals" ? "#6865ff" : "rgba(225,225,245,0.13)",
+              color: dark ? "#fff" : "#312e67",
+              border: "none",
+              padding: "6px 16px",
+              borderRadius: 12,
+              fontWeight: 600,
+              fontSize: 16,
+              cursor: "pointer",
+              outline: "none",
+              letterSpacing: 1,
+              boxShadow: activeTab === "metals" ? "0 2px 10px #7c7cff40" : undefined,
+              transition: "background .22s",
+            }}
+            aria-label={t.metalsTab}
+          >
+            {t.metalsTab}
+          </button>
         </div>
 
-        {/* Inhalt Tabs */}
-        {tab === "rates" && (
-          <>
-            {/* Überschrift */}
-            <div
-              style={{
-                marginBottom: 22,
-                marginTop: 7,
-                fontSize: 32,
-                fontWeight: 700,
-                letterSpacing: 1.2,
-                color,
-                textShadow: dark ? "0 2px 8px #3d2f7433" : undefined,
-              }}
-            >
-              {t.appName}
-              <span
-                style={{
-                  fontSize: 21,
-                  color: subcolor,
-                  marginLeft: 15,
-                  letterSpacing: 1,
-                  fontWeight: 400,
-                }}
-              >
-                – {t.subtitle}
-              </span>
-            </div>
+        {/* Überschrift */}
+        <div
+          style={{
+            marginBottom: 22,
+            marginTop: 7,
+            fontSize: 32,
+            fontWeight: 700,
+            letterSpacing: 1.2,
+            color,
+            textShadow: dark ? "0 2px 8px #3d2f7433" : undefined,
+          }}
+        >
+          {t.appName}
+          <span
+            style={{
+              fontSize: 21,
+              color: subcolor,
+              marginLeft: 15,
+              letterSpacing: 1,
+              fontWeight: 400,
+            }}
+          >
+            – {t.subtitle}
+          </span>
+        </div>
 
+        {/* Inhalte je nach aktivem Tab */}
+        {activeTab === "currencies" && (
+          <>
             {/* Währungsrechner */}
             <div
               style={{
@@ -802,45 +804,73 @@ export default function Home() {
           </>
         )}
 
-        {tab === "gold" && (
+        {activeTab === "metals" && (
           <div
             style={{
+              background: card,
+              borderRadius: 15,
+              boxShadow: "0 2px 13px 0 rgba(62,56,110,0.06)",
+              padding: 20,
               color,
-              fontSize: 16,
-              fontWeight: 600,
+              minHeight: 200,
             }}
           >
-            {loadingGold && <p>{t.loadingGold}</p>}
-            {errorGold && <p>{errorGold}</p>}
-            {!loadingGold && !errorGold && goldData.length > 0 && (
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  marginTop: 10,
-                  color,
-                }}
-              >
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${subcolor}` }}>
-                    <th style={{ textAlign: "left", padding: "8px" }}>Name</th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>Preis</th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>Währung</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {goldData.map((item, idx) => (
-                    <tr key={idx} style={{ borderBottom: `1px solid ${subcolor}` }}>
-                      <td style={{ padding: "8px" }}>{item.name}</td>
-                      <td style={{ padding: "8px" }}>{item.price}</td>
-                      <td style={{ padding: "8px" }}>{item.currency}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div
+              style={{
+                fontSize: 17,
+                fontWeight: 600,
+                marginBottom: 15,
+                letterSpacing: 0.5,
+              }}
+            >
+              {t.metalsTab}
+            </div>
+            {loadingGold ? (
+              <div>{t.loading}</div>
+            ) : errorGold ? (
+              <div>{errorGold}</div>
+            ) : (
+              goldData.map((item) => (
+                <div
+                  key={item.name}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "10px 15px",
+                    fontSize: 16,
+                    borderBottom: "1px solid rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <div>{item.name}</div>
+                  <div>
+                    {item.price} {item.currency}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         )}
+
+        {/* Footer */}
+        <div
+          style={{
+            marginTop: 21,
+            color: subcolor,
+            fontSize: 14,
+            letterSpacing: 0.5,
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>
+            {timestamp && (
+              <>
+                {t.lastUpdate}: <span>{timestamp}</span>
+              </>
+            )}
+          </span>
+          <span>{t.powered}</span>
+        </div>
       </div>
     </div>
   );

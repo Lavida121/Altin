@@ -100,6 +100,12 @@ function MiniChart({ values, dark }: { values: number[]; dark: boolean }) {
   );
 }
 
+const LANG_FLAGS: { [key: string]: string } = {
+  de: "🇩🇪",  // Deutschland
+  en: "🇺🇸",  // USA
+  tr: "🇹🇷",  // Türkei
+};
+
 export default function Home() {
   const [lang, setLang] = useState<"de" | "en" | "tr">("de");
   const t = TRANSLATIONS[lang];

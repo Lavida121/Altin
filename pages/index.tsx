@@ -102,6 +102,7 @@ function MiniChart({ values, dark }: { values: number[]; dark: boolean }) {
 
 export default function Home() {
   const [lang, setLang] = useState<"de" | "en" | "tr">("de");
+  const t = TRANSLATIONS[lang];
   const [dark, setDark] = useState(true);
   const [isFull, setIsFull] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);

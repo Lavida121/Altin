@@ -108,6 +108,7 @@ const LANG_FLAGS: { [key: string]: string } = {
 
 export default function Home() {
   const [lang, setLang] = useState<"de" | "en" | "tr">("de");
+  const t = TRANSLATIONS[lang];
   return (
     <div>
       {(["de", "en", "tr"] as const).map(l => (

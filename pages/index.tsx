@@ -57,7 +57,7 @@ const TRANSLATIONS = {
 
 // Währungen & Flaggen
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" },
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇬🇧" }, // Englische Flagge hier
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
@@ -66,20 +66,20 @@ const CURRENCIES = [
 ];
 
 const APP_ID = "c8a594d6cc68451e8734188995aa419e"; // OpenExchangeRates Key
-const BASES = ["TRY", "EUR", "USD"]; // Umschaltbare Basen
+const BASES = ["TRY", "EUR", "USD"];
 
 const formatRate = (rate: number) => (rate >= 10 ? rate.toFixed(3) : rate.toFixed(4));
 
 function MiniChart({ values, dark }: { values: number[]; dark: boolean }) {
   if (!values || values.length < 2) return null;
-  const w = 66, h = 22, pad = 3;
-  const min = Math.min(...values), max = Math.max(...values);
+  const w = 66,
+    h = 22,
+    pad = 3;
+  const min = Math.min(...values),
+    max = Math.max(...values);
   const range = max - min || 1;
   const norm = (v: number) => h - pad - ((v - min) / range) * (h - pad * 2);
-  const points = values.map((v, i) => [
-    (i / (values.length - 1)) * (w - pad * 2) + pad,
-    norm(v),
-  ]);
+  const points = values.map((v, i) => [(i / (values.length - 1)) * (w - pad * 2) + pad, norm(v)]);
   const color =
     values[values.length - 1] > values[0]
       ? "#40ee85"
@@ -90,12 +90,7 @@ function MiniChart({ values, dark }: { values: number[]; dark: boolean }) {
       : "#8b8bb3";
   return (
     <svg width={w} height={h}>
-      <polyline
-        fill="none"
-        stroke={color}
-        strokeWidth={2.1}
-        points={points.map(p => p.join(",")).join(" ")}
-      />
+      <polyline fill="none" stroke={color} strokeWidth={2.1} points={points.map((p) => p.join(",")).join(" ")} />
     </svg>
   );
 }
@@ -121,7 +116,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
-  // Mobile-Erkennung für Grid & Layout
+  // Mobile-Erkennung
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 600);
@@ -166,7 +161,7 @@ export default function Home() {
     const data = await res.json();
     const r = data.rates;
     const newRates: { [key: string]: number } = {};
-    CURRENCIES.forEach(c => {
+    CURRENCIES.forEach((c) => {
       newRates[c.code] = r[base] / r[c.code];
     });
     const newBlink: { [key: string]: "up" | "down" | null } = {};
@@ -180,64 +175,52 @@ export default function Home() {
     setBlink(newBlink);
     setPrevRates(newRates);
     setRates(newRates);
-    setTimestamp(
-      data.timestamp ? new Date(data.timestamp * 1000).toLocaleTimeString() : ""
-    );
-    setHistory(h =>
+    setTimestamp(data.timestamp ? new Date(data.timestamp * 1000).toLocaleTimeString() : "");
+    setHistory((h) =>
       Object.fromEntries(
-        Object.entries(newRates).map(([code, v]) => [
-          code,
-          [...(h[code] || []), v].slice(-24),
-        ])
+        Object.entries(newRates).map(([code, v]) => [code, [...(h[code] || []), v].slice(-24)])
       )
     );
     Object.entries(newBlink).forEach(([code, dir]) => {
       if (dir) {
         if (blinkTimeouts.current[code]) clearTimeout(blinkTimeouts.current[code]);
         blinkTimeouts.current[code] = setTimeout(() => {
-          setBlink(b => ({ ...b, [code]: null }));
+          setBlink((b) => ({ ...b, [code]: null }));
         }, 1100);
       }
     });
     setIsLoading(false);
   }
 
-  // Alle 2 Sekunden aktualisieren
+  // Automatisches Update alle 2 Sekunden
   useEffect(() => {
     fetchRates(date);
     const interval = setInterval(() => fetchRates(date), 2000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line
   }, [date, base]);
 
-  // Konverter berechnen
+  // Währungsrechner berechnen
   useEffect(() => {
     if (!rates[from] || !rates[to]) {
       setToValue("");
       return;
     }
-    // Richtige Formel: to / from
-    const result = rates[to] / rates[from];
+    const result = rates[from] / rates[to];
     const fVal = parseFloat(fromValue.replace(",", "."));
     if (isNaN(fVal)) setToValue("");
     else setToValue((fVal * result).toFixed(4));
-    // eslint-disable-next-line
   }, [fromValue, from, to, rates]);
 
-  // Wechsel von und zu tauschen
   function swap() {
     setFrom(to);
     setTo(from);
     setFromValue(toValue || "1");
   }
 
-  // Farben & Styles
   const bg = dark
     ? "radial-gradient(ellipse at 70% 0,#232141 0,#28246b 70%,#141228 100%)"
     : "radial-gradient(ellipse at 80% 0,#f1f1ff 0,#e0e0ff 80%,#f7f9fc 100%)";
-  const box = dark
-    ? "rgba(41,41,75,0.85)"
-    : "rgba(255,255,255,0.98)";
+  const box = dark ? "rgba(41,41,75,0.85)" : "rgba(255,255,255,0.98)";
   const card = dark
     ? "linear-gradient(140deg,#444067 60%,#7266d3 100%)"
     : "linear-gradient(140deg,#dedbf6 60%,#ece8fa 100%)";
@@ -270,22 +253,13 @@ export default function Home() {
           marginTop: isMobile ? 10 : 30,
           marginBottom: isMobile ? 18 : 36,
           backdropFilter: "blur(9px)",
-          border: dark
-            ? "1.5px solid rgba(144, 135, 234, 0.11)"
-            : "1.5px solid #eceafe",
+          border: dark ? "1.5px solid rgba(144, 135, 234, 0.11)" : "1.5px solid #eceafe",
           transition: "background .3s,border .3s",
-          color,
         }}
       >
         {/* Toolbar: Sprache, Modus, Vollbild, Basisauswahl */}
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-            marginBottom: -8,
-          }}
-        >
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: -8 }}>
+          {/* Sprache */}
           {(["de", "en", "tr"] as const).map((l) => (
             <button
               key={l}
@@ -304,13 +278,11 @@ export default function Home() {
                 boxShadow: lang === l ? "0 2px 10px #7c7cff40" : undefined,
                 transition: "background .22s",
               }}
-              title={`Sprache ${l.toUpperCase()}`}
-              aria-label={`Sprache ${l.toUpperCase()}`}
             >
-              {/* Flaggen */}
-              {l === "de" ? "🇩🇪" : l === "en" ? "🇬🇧" : "🇹🇷"}
+              {l.toUpperCase()}
             </button>
           ))}
+          {/* Dark/Lightmode */}
           <button
             onClick={() => setDark((d) => !d)}
             style={{
@@ -329,19 +301,18 @@ export default function Home() {
               transition: "background .23s",
             }}
             title={t.mode}
-            aria-label={t.mode}
           >
             {dark ? "🌙" : "☀️"}
           </button>
+          {/* Vollbild */}
           <button
             onClick={isFull ? exitFullscreen : enterFullscreen}
-            title={isFull ? t.exitFullscreen : t.fullscreen}
             style={{
-              marginLeft: isMobile ? 6 : 7,
+              marginLeft: 7,
               background: dark ? "#29295f" : "#e3e1fb",
               color: dark ? "#fff" : "#2d2d53",
               border: "none",
-              padding: isMobile ? "4px 12px" : "6px 14px",
+              padding: "6px 14px",
               borderRadius: 11,
               fontWeight: 600,
               fontSize: 16,
@@ -351,20 +322,12 @@ export default function Home() {
               boxShadow: dark ? "0 2px 8px #111" : undefined,
               transition: "background .21s",
             }}
-            aria-label={isFull ? t.exitFullscreen : t.fullscreen}
+            title={isFull ? t.exitFullscreen : t.fullscreen}
           >
             {isFull ? "🡸" : "⛶"}
           </button>
-          <span
-            style={{
-              marginLeft: 17,
-              color: subcolor,
-              fontSize: 15,
-              fontWeight: 600,
-            }}
-          >
-            {t.base}:
-          </span>
+          {/* Basis-Währung */}
+          <span style={{ marginLeft: 17, color: subcolor, fontSize: 15, fontWeight: 600 }}>{t.base}:</span>
           {BASES.map((b) => (
             <button
               key={b}
@@ -382,7 +345,6 @@ export default function Home() {
                 boxShadow: base === b ? "0 2px 7px #31ffc86b" : undefined,
                 transition: "background .16s",
               }}
-              aria-label={`Basiswährung ${b}`}
             >
               {b}
             </button>
@@ -390,12 +352,7 @@ export default function Home() {
         </div>
 
         {/* Überschrift */}
-        <div
-          style={{
-            marginBottom: 22,
-            marginTop: 7,
-          }}
-        >
+        <div style={{ marginBottom: 22, marginTop: 7 }}>
           <span
             style={{
               fontSize: 32,
@@ -441,13 +398,8 @@ export default function Home() {
           >
             {t.calculator}
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-            }}
-          >
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {/* Von */}
             <div style={{ flex: 1, minWidth: 160 }}>
               <input
                 type="number"
@@ -457,15 +409,14 @@ export default function Home() {
                 aria-label={t.from}
                 style={{
                   width: "100%",
-                  borderRadius: 8,
+                  padding: "9px 9px",
                   fontSize: 17,
-                  padding: 9,
-                  border: `1px solid ${dark ? "#373764" : "#dedbf9"}`,
+                  borderRadius: 8,
+                  border: dark ? "1px solid #373764" : "1px solid #dedbf9",
                   marginBottom: 5,
                   outline: "none",
                   background: dark ? "#232350" : "#efeefe",
                   color: dark ? "#fff" : "#23205a",
-                  transition: "border 0.2s",
                 }}
               />
               <select
@@ -474,14 +425,13 @@ export default function Home() {
                 aria-label={t.from}
                 style={{
                   width: "100%",
-                  borderRadius: 8,
+                  padding: "7px 9px",
                   fontSize: 17,
-                  padding: 9,
-                  border: `1px solid ${dark ? "#373764" : "#dedbf9"}`,
-                  outline: "none",
+                  borderRadius: 8,
+                  border: dark ? "1px solid #373764" : "1px solid #dedbf9",
                   background: dark ? "#232350" : "#efeefe",
                   color: dark ? "#fff" : "#23205a",
-                  transition: "border 0.2s",
+                  outline: "none",
                 }}
               >
                 {CURRENCIES.map((c) => (
@@ -492,6 +442,7 @@ export default function Home() {
               </select>
             </div>
 
+            {/* Tauschen Button */}
             <div
               onClick={swap}
               title="Währungen tauschen"
@@ -518,6 +469,7 @@ export default function Home() {
               ⇅
             </div>
 
+            {/* Nach */}
             <div style={{ flex: 1, minWidth: 160 }}>
               <input
                 type="number"
@@ -527,15 +479,14 @@ export default function Home() {
                 aria-label={t.to}
                 style={{
                   width: "100%",
-                  borderRadius: 8,
+                  padding: "9px 9px",
                   fontSize: 17,
-                  padding: 9,
-                  border: `1px solid ${dark ? "#373764" : "#dedbf9"}`,
+                  borderRadius: 8,
+                  border: dark ? "1px solid #373764" : "1px solid #dedbf9",
                   marginBottom: 5,
                   outline: "none",
                   background: dark ? "#202040" : "#eaeaf7",
                   color: dark ? "#fff" : "#23205a",
-                  transition: "border 0.2s",
                 }}
               />
               <select
@@ -544,14 +495,13 @@ export default function Home() {
                 aria-label={t.to}
                 style={{
                   width: "100%",
-                  borderRadius: 8,
+                  padding: "7px 9px",
                   fontSize: 17,
-                  padding: 9,
-                  border: `1px solid ${dark ? "#373764" : "#dedbf9"}`,
-                  outline: "none",
-                  background: dark ? "#232350" : "#efeefe",
+                  borderRadius: 8,
+                  border: dark ? "1px solid #373764" : "1px solid #dedbf9",
+                  background: dark ? "#202040" : "#eaeaf7",
                   color: dark ? "#fff" : "#23205a",
-                  transition: "border 0.2s",
+                  outline: "none",
                 }}
               >
                 {CURRENCIES.map((c) => (
@@ -563,6 +513,7 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Datum und Kursanzeige */}
           <div
             style={{
               display: "flex",
@@ -575,36 +526,40 @@ export default function Home() {
               letterSpacing: 0.4,
             }}
           >
-            <label>{t.rateDate}:</label>
-            <input
-              type="date"
-              value={date}
-              max={today}
-              onChange={(e) => setDate(e.target.value)}
-              style={{
-                padding: "5px 7px",
-                borderRadius: 6,
-                border: `1px solid ${dark ? "#35315a" : "#cfc8f3"}`,
-                background: dark ? "#1e1d3e" : "#fcfcff",
-                fontSize: 13,
-                color: dark ? "#fff" : "#23205a",
-                marginLeft: 7,
-              }}
-            />
             <div>
-              1 {from} = {rates[from] && rates[to] ? (rates[to] / rates[from]).toFixed(4) : "--"} {to}
+              <label>{t.rateDate}:</label>
+              <input
+                type="date"
+                value={date}
+                max={today}
+                onChange={(e) => setDate(e.target.value)}
+                style={{
+                  padding: "5px 7px",
+                  borderRadius: 6,
+                  border: dark ? "1px solid #35315a" : "1px solid #cfc8f3",
+                  background: dark ? "#1e1d3e" : "#fcfcff",
+                  fontSize: 13,
+                  color: dark ? "#fff" : "#23205a",
+                  marginLeft: 7,
+                }}
+              />
+            </div>
+            <div>
+              {isLoading
+                ? t.loading
+                : `1 ${from} = ${formatRate(rates[from] / rates[to])} ${to}`}
             </div>
           </div>
         </div>
 
-        {/* Wechselkurse mit Mini-Charts */}
+        {/* Wechselkurse Übersicht */}
         <div
           style={{
             color: subcolor,
-            fontSize: 17,
+            fontSize: isMobile ? 15 : 17,
             fontWeight: 600,
             letterSpacing: 0.3,
-            marginBottom: 11,
+            marginBottom: isMobile ? 14 : 11,
           }}
         >
           {t.currencyRates} ({base}-Basis)
@@ -642,13 +597,13 @@ export default function Home() {
                   display: "flex",
                   alignItems: "center",
                   fontWeight: 700,
-                  fontSize: 18,
+                  fontSize: isMobile ? 16 : 18,
                   marginBottom: 3,
                 }}
               >
                 <span
                   style={{
-                    fontSize: 23,
+                    fontSize: isMobile ? 20 : 23,
                     marginRight: 7,
                   }}
                 >
@@ -658,16 +613,16 @@ export default function Home() {
               </div>
               <div
                 style={{
-                  fontSize: 13,
+                  fontSize: isMobile ? 12 : 13,
                   color: subcolor,
-                  marginBottom: 5,
+                  marginBottom: isMobile ? 3 : 5,
                 }}
               >
                 {currency.name[lang]}
               </div>
               <div
                 style={{
-                  fontSize: 19,
+                  fontSize: isMobile ? 16 : 19,
                   fontWeight: 600,
                   letterSpacing: 0.3,
                   display: "flex",
@@ -683,7 +638,7 @@ export default function Home() {
                   onClick={() => copyRate(currency.code, rates[currency.code])}
                   title={t.copy}
                   style={{
-                    fontSize: 13,
+                    fontSize: isMobile ? 12 : 13,
                     background: dark ? "rgba(244,244,255,0.09)" : "#eceafe",
                     color: dark ? "#d5d3f9" : "#665db9",
                     border: "none",

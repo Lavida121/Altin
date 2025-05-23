@@ -62,15 +62,19 @@ const LANG_FLAGS: { [key in keyof typeof TRANSLATIONS]: string } = {
   tr: "🇹🇷",
 };
 
-// Währungen + Flaggen
+// Währungen + Flaggen (umfangreiche Liste der wichtigsten Währungen)
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇬🇧" }, // Englische Flagge bei USD
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" },
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
   { code: "JPY", name: { de: "Japanischer Yen", en: "Japanese Yen", tr: "Japon Yeni" }, flag: "🇯🇵" },
   { code: "TRY", name: { de: "Türkische Lira", en: "Turkish Lira", tr: "Türk Lirası" }, flag: "🇹🇷" },
+  // Hier kannst du gerne mehr Währungen hinzufügen ...
 ];
+
+// Wichtige Währungen als Top-Währungen (für Übersicht)
+const TOP_CURRENCIES_CODES = ["USD", "EUR", "GBP", "CHF", "JPY", "TRY"];
 
 const APP_ID = "c8a594d6cc68451e8734188995aa419e";
 const BASES = ["TRY", "EUR", "USD"];
@@ -124,12 +128,27 @@ export default function Home() {
   const today = new Date().toISOString().split("T")[0];
 
   const [isMobile, setIsMobile] = useState(false);
+
+  // Suchfilter für Dropdowns
+  const [fromFilter, setFromFilter] = useState("");
+  const [toFilter, setToFilter] = useState("");
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 600);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Gefilterte Währungen für Dropdown
+  const filteredFromCurrencies = CURRENCIES.filter(
+    (c) =>
+      c.name[lang].toLowerCase().includes(fromFilter.toLowerCase()) ||
+      c.code.toLowerCase().includes(fromFilter.toLowerCase())
+  );
+  const filteredToCurrencies = CURRENCIES.filter(
+    (c) => c.name[lang].toLowerCase().includes(toFilter.toLowerCase()) || c.code.toLowerCase().includes(toFilter.toLowerCase())
+  );
 
   function copyRate(code: string, rate: number) {
     const msg = `1 ${code} = ${formatRate(rate)} ${base}`;
@@ -447,10 +466,26 @@ export default function Home() {
                   color: dark ? "#fff" : "#23205a",
                 }}
               />
+              <input
+                type="text"
+                placeholder="Währung suchen..."
+                value={fromFilter}
+                onChange={(e) => setFromFilter(e.target.value)}
+                style={{
+                  width: "100%",
+                  marginBottom: 4,
+                  padding: "6px",
+                  borderRadius: 6,
+                  border: dark ? "1px solid #373764" : "1px solid #dedbf9",
+                  background: dark ? "#232350" : "#efeefe",
+                  color: dark ? "#fff" : "#23205a",
+                }}
+              />
               <select
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 aria-label={t.from}
+                size={6}
                 style={{
                   width: "100%",
                   padding: "7px 9px",
@@ -462,7 +497,7 @@ export default function Home() {
                   outline: "none",
                 }}
               >
-                {CURRENCIES.map((c) => (
+                {filteredFromCurrencies.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.flag} {c.name[lang]}
                   </option>
@@ -517,10 +552,26 @@ export default function Home() {
                   color: dark ? "#fff" : "#23205a",
                 }}
               />
+              <input
+                type="text"
+                placeholder="Währung suchen..."
+                value={toFilter}
+                onChange={(e) => setToFilter(e.target.value)}
+                style={{
+                  width: "100%",
+                  marginBottom: 4,
+                  padding: "6px",
+                  borderRadius: 6,
+                  border: dark ? "1px solid #373764" : "1px solid #dedbf9",
+                  background: dark ? "#202040" : "#eaeaf7",
+                  color: dark ? "#fff" : "#23205a",
+                }}
+              />
               <select
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 aria-label={t.to}
+                size={6}
                 style={{
                   width: "100%",
                   padding: "7px 9px",
@@ -532,7 +583,7 @@ export default function Home() {
                   outline: "none",
                 }}
               >
-                {CURRENCIES.map((c) => (
+                {filteredToCurrencies.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.flag} {c.name[lang]}
                   </option>
@@ -599,97 +650,101 @@ export default function Home() {
             gap: isMobile ? 11 : 21,
           }}
         >
-          {CURRENCIES.map((currency) => (
-            <div
-              key={currency.code}
-              style={{
-                background: card,
-                borderRadius: 14,
-                boxShadow: "0 4px 18px 0 rgba(67,54,133,0.08)",
-                padding: "15px 11px 11px 11px",
-                minHeight: 75,
-                position: "relative",
-                transition: "box-shadow 0.2s",
-                overflow: "visible",
-                color,
-                border:
-                  blink[currency.code] === "up"
-                    ? "2px solid #28e15c"
-                    : blink[currency.code] === "down"
-                    ? "2px solid #e12828"
-                    : "2px solid transparent",
-              }}
-            >
+          {TOP_CURRENCIES_CODES.map((code) => {
+            const currency = CURRENCIES.find((c) => c.code === code);
+            if (!currency) return null;
+            return (
               <div
+                key={currency.code}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  fontWeight: 700,
-                  fontSize: isMobile ? 16 : 18,
-                  marginBottom: 3,
+                  background: card,
+                  borderRadius: 14,
+                  boxShadow: "0 4px 18px 0 rgba(67,54,133,0.08)",
+                  padding: "15px 11px 11px 11px",
+                  minHeight: 75,
+                  position: "relative",
+                  transition: "box-shadow 0.2s",
+                  overflow: "visible",
+                  color,
+                  border:
+                    blink[currency.code] === "up"
+                      ? "2px solid #28e15c"
+                      : blink[currency.code] === "down"
+                      ? "2px solid #e12828"
+                      : "2px solid transparent",
                 }}
               >
-                <span
+                <div
                   style={{
-                    fontSize: isMobile ? 20 : 23,
-                    marginRight: 7,
+                    display: "flex",
+                    alignItems: "center",
+                    fontWeight: 700,
+                    fontSize: isMobile ? 16 : 18,
+                    marginBottom: 3,
                   }}
                 >
-                  {currency.flag}
-                </span>
-                {currency.code}
-              </div>
-              <div
-                style={{
-                  fontSize: isMobile ? 12 : 13,
-                  color: subcolor,
-                  marginBottom: isMobile ? 3 : 5,
-                }}
-              >
-                {currency.name[lang]}
-              </div>
-              <div
-                style={{
-                  fontSize: isMobile ? 16 : 19,
-                  fontWeight: 600,
-                  letterSpacing: 0.3,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  minHeight: 21,
-                  transition: "color 0.3s",
-                  marginBottom: 2,
-                }}
-              >
-                {rates[currency.code] ? formatRate(rates[currency.code]) : "--"}
-                <button
-                  onClick={() => copyRate(currency.code, rates[currency.code])}
-                  title={t.copy}
+                  <span
+                    style={{
+                      fontSize: isMobile ? 20 : 23,
+                      marginRight: 7,
+                    }}
+                  >
+                    {currency.flag}
+                  </span>
+                  {currency.code}
+                </div>
+                <div
                   style={{
                     fontSize: isMobile ? 12 : 13,
-                    background: dark ? "rgba(244,244,255,0.09)" : "#eceafe",
-                    color: dark ? "#d5d3f9" : "#665db9",
-                    border: "none",
-                    borderRadius: 6,
-                    marginLeft: 1,
-                    cursor: "pointer",
-                    padding: "2px 7px",
+                    color: subcolor,
+                    marginBottom: isMobile ? 3 : 5,
                   }}
                 >
-                  📋
-                </button>
+                  {currency.name[lang]}
+                </div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 16 : 19,
+                    fontWeight: 600,
+                    letterSpacing: 0.3,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    minHeight: 21,
+                    transition: "color 0.3s",
+                    marginBottom: 2,
+                  }}
+                >
+                  {rates[currency.code] ? formatRate(rates[currency.code]) : "--"}
+                  <button
+                    onClick={() => copyRate(currency.code, rates[currency.code])}
+                    title={t.copy}
+                    style={{
+                      fontSize: isMobile ? 12 : 13,
+                      background: dark ? "rgba(244,244,255,0.09)" : "#eceafe",
+                      color: dark ? "#d5d3f9" : "#665db9",
+                      border: "none",
+                      borderRadius: 6,
+                      marginLeft: 1,
+                      cursor: "pointer",
+                      padding: "2px 7px",
+                    }}
+                  >
+                    📋
+                  </button>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 7,
+                    bottom: 6,
+                  }}
+                >
+                  <MiniChart values={history[currency.code] || []} dark={dark} />
+                </div>
               </div>
-              <div
-                style={{
-                  position: "absolute",
-                  right: 7,
-                  bottom: 6,
-                }}
-              >
-                <MiniChart values={history[currency.code] || []} dark={dark} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer */}

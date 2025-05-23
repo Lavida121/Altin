@@ -493,7 +493,6 @@ export default function Home() {
                   fontWeight: 700,
                   fontSize: 21,
                   userSelect: "none",
-                  userDrag: "none",
                 }}
               >
                 ⇅

@@ -82,7 +82,7 @@ const LANG_FLAGS: { [key in keyof typeof TRANSLATIONS]: string } = {
 
 // Währungen + Flaggen
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" },
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" }, // USA Flagge
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
@@ -143,10 +143,10 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
-  // Tab State: currencies oder metals
+  // Tab State: Währungen oder Edelmetalle
   const [activeTab, setActiveTab] = useState<"currencies" | "metals">("currencies");
 
-  // Edelmetall Daten State
+  // Edelmetall State
   const [metalsData, setMetalsData] = useState<{ name: string; price: number; currency: string }[]>([]);
   const [loadingMetals, setLoadingMetals] = useState(false);
   const [errorMetals, setErrorMetals] = useState("");
@@ -159,13 +159,13 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Kopiere Kurs in Zwischenablage
+  // Kurs in Zwischenablage kopieren
   function copyRate(code: string, rate: number) {
     const msg = `1 ${code} = ${formatRate(rate)} ${base}`;
     navigator.clipboard.writeText(msg);
   }
 
-  // Vollbild Funktionen
+  // Vollbildfunktionen
   function enterFullscreen() {
     if (rootRef.current?.requestFullscreen) {
       rootRef.current.requestFullscreen();
@@ -229,7 +229,7 @@ export default function Home() {
     setIsLoading(false);
   }
 
-  // Edelmetall-Preise laden
+  // Edelmetallpreise von RapidAPI laden
   async function fetchMetals() {
     setLoadingMetals(true);
     setErrorMetals("");
@@ -241,17 +241,13 @@ export default function Home() {
           "X-RapidAPI-Host": "harem-altin-live-gold-price-data.p.rapidapi.com",
         },
       });
-      if (!response.ok) throw new Error(`HTTP-Fehler ${response.status}`);
       const data = await response.json();
-
-      // Annahme: data ist ein Array von Preisen mit name, price, currency (ggf. anpassen je API)
-      setMetalsData(
-        data.map((item: any) => ({
-          name: item.name,
-          price: item.price,
-          currency: item.currency,
-        }))
-      );
+      if (!data.rates || !data.base) throw new Error("Invalid API response");
+      const items = [
+        { name: t.gold, price: data.rates.XAU, currency: data.base },
+        { name: t.silver, price: data.rates.XAG, currency: data.base },
+      ];
+      setMetalsData(items);
     } catch (error) {
       setErrorMetals(t.errorLoading);
     } finally {
@@ -259,18 +255,18 @@ export default function Home() {
     }
   }
 
-  // Daten laden bei Mount + Interval
+  // Daten laden
   useEffect(() => {
     fetchRates(date);
     if (activeTab === "metals") fetchMetals();
     const interval = setInterval(() => {
       fetchRates(date);
       if (activeTab === "metals") fetchMetals();
-    }, 5000);
+    }, 2000);
     return () => clearInterval(interval);
   }, [date, base, activeTab]);
 
-  // Rechner umrechnen
+  // Umrechnungsrechnung aktualisieren
   useEffect(() => {
     if (!rates[from] || !rates[to]) {
       setToValue("");
@@ -289,7 +285,7 @@ export default function Home() {
     setFromValue(toValue || "1");
   }
 
-  // Styling
+  // Styling-Variablen
   const bg = dark
     ? "radial-gradient(ellipse at 70% 0,#232141 0,#28246b 70%,#141228 100%)"
     : "radial-gradient(ellipse at 80% 0,#f1f1ff 0,#e0e0ff 80%,#f7f9fc 100%)";
@@ -446,7 +442,7 @@ export default function Home() {
             </button>
           ))}
 
-          {/* Tab-Wechsel */}
+          {/* Tab Wechsel */}
           <button
             onClick={() => setActiveTab("currencies")}
             style={{
@@ -516,7 +512,7 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Inhalt je nach aktivem Tab */}
+        {/* Inhalte je nach aktivem Tab */}
         {activeTab === "currencies" && (
           <>
             {/* Währungsrechner */}

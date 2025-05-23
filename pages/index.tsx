@@ -82,7 +82,7 @@ const LANG_FLAGS: { [key in keyof typeof TRANSLATIONS]: string } = {
 
 // Währungen + Flaggen
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" }, // USA Flagge
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" },
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
@@ -242,6 +242,9 @@ export default function Home() {
         },
       });
       const data = await response.json();
+
+      if (!data.rates || !data.base) throw new Error("Invalid API response");
+
       const items = [
         { name: t.gold, price: data.rates.XAU, currency: data.base },
         { name: t.silver, price: data.rates.XAG, currency: data.base },

@@ -281,12 +281,12 @@ export default function Home() {
         style={{
           background: box,
           boxShadow: "0 10px 40px 0 rgba(44,32,110,0.16)",
-          borderRadius: 32,
-          maxWidth: 850,
+          borderRadius: isMobile ? 14 : 32,
+          maxWidth: isMobile ? "100vw" : 850,
           width: "99vw",
-          padding: "34px 34px 28px 34px",
-          marginTop: 30,
-          marginBottom: 36,
+          padding: isMobile ? "12px 4px 20px 4px" : "34px 34px 28px 34px",
+          marginTop: isMobile ? 10 : 30,
+          marginBottom: isMobile ? 18 : 36,
           backdropFilter: "blur(9px)",
           border: dark
             ? "1.5px solid rgba(144, 135, 234, 0.11)"

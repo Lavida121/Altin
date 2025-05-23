@@ -146,10 +146,10 @@ export default function Home() {
   // Tab State: Währungen oder Edelmetalle
   const [activeTab, setActiveTab] = useState<"currencies" | "metals">("currencies");
 
-  // Edelmetall State
-  const [metalsData, setMetalsData] = useState<{ name: string; price: number; currency: string }[]>([]);
-  const [loadingMetals, setLoadingMetals] = useState(false);
-  const [errorMetals, setErrorMetals] = useState("");
+  // Gold & Silber State
+  const [goldData, setGoldData] = useState<{ name: string; price: number; currency: string }[]>([]);
+  const [loadingGold, setLoadingGold] = useState(false);
+  const [errorGold, setErrorGold] = useState("");
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -159,13 +159,11 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Kurs in Zwischenablage kopieren
   function copyRate(code: string, rate: number) {
     const msg = `1 ${code} = ${formatRate(rate)} ${base}`;
     navigator.clipboard.writeText(msg);
   }
 
-  // Vollbildfunktionen
   function enterFullscreen() {
     if (rootRef.current?.requestFullscreen) {
       rootRef.current.requestFullscreen();
@@ -187,7 +185,6 @@ export default function Home() {
     };
   }, []);
 
-  // Wechselkurse laden
   async function fetchRates(dateStr?: string) {
     setIsLoading(true);
     let url = `https://openexchangerates.org/api/latest.json?app_id=${APP_ID}`;
@@ -229,10 +226,9 @@ export default function Home() {
     setIsLoading(false);
   }
 
-  // Edelmetallpreise von RapidAPI laden
-  async function fetchMetals() {
-    setLoadingMetals(true);
-    setErrorMetals("");
+  async function fetchGoldPrices() {
+    setLoadingGold(true);
+    setErrorGold("");
     try {
       const response = await fetch("https://harem-altin-live-gold-price-data.p.rapidapi.com/harem_altin/prices", {
         method: "GET",
@@ -242,31 +238,31 @@ export default function Home() {
         },
       });
       const data = await response.json();
+
       if (!data.rates || !data.base) throw new Error("Invalid API response");
+
       const items = [
         { name: t.gold, price: data.rates.XAU, currency: data.base },
         { name: t.silver, price: data.rates.XAG, currency: data.base },
       ];
-      setMetalsData(items);
-    } catch (error) {
-      setErrorMetals(t.errorLoading);
+      setGoldData(items);
+    } catch {
+      setErrorGold(t.errorLoading);
     } finally {
-      setLoadingMetals(false);
+      setLoadingGold(false);
     }
   }
 
-  // Daten laden
   useEffect(() => {
     fetchRates(date);
-    if (activeTab === "metals") fetchMetals();
+    fetchGoldPrices();
     const interval = setInterval(() => {
       fetchRates(date);
-      if (activeTab === "metals") fetchMetals();
+      if (activeTab === "metals") fetchGoldPrices();
     }, 2000);
     return () => clearInterval(interval);
   }, [date, base, activeTab]);
 
-  // Umrechnungsrechnung aktualisieren
   useEffect(() => {
     if (!rates[from] || !rates[to]) {
       setToValue("");
@@ -278,14 +274,12 @@ export default function Home() {
     else setToValue((fVal * result).toFixed(4));
   }, [fromValue, from, to, rates]);
 
-  // Währungen tauschen
   function swap() {
     setFrom(to);
     setTo(from);
     setFromValue(toValue || "1");
   }
 
-  // Styling-Variablen
   const bg = dark
     ? "radial-gradient(ellipse at 70% 0,#232141 0,#28246b 70%,#141228 100%)"
     : "radial-gradient(ellipse at 80% 0,#f1f1ff 0,#e0e0ff 80%,#f7f9fc 100%)";
@@ -826,12 +820,12 @@ export default function Home() {
             >
               {t.metalsTab}
             </div>
-            {loadingMetals ? (
+            {loadingGold ? (
               <div>{t.loading}</div>
-            ) : errorMetals ? (
-              <div>{errorMetals}</div>
+            ) : errorGold ? (
+              <div>{errorGold}</div>
             ) : (
-              metalsData.map((item) => (
+              goldData.map((item) => (
                 <div
                   key={item.name}
                   style={{

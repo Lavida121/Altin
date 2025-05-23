@@ -108,6 +108,16 @@ const LANG_FLAGS: { [key: string]: string } = {
 
 export default function Home() {
   const [lang, setLang] = useState<"de" | "en" | "tr">("de");
+  return (
+    <div>
+      {(["de", "en", "tr"] as const).map(l => (
+        <button key={l} onClick={() => setLang(l)}>
+          {LANG_FLAGS[l]}
+        </button>
+      ))}
+    </div>
+  );
+}
   const t = TRANSLATIONS[lang];
   const [dark, setDark] = useState(true);
   const [isFull, setIsFull] = useState(false);

@@ -105,6 +105,16 @@ export default function Home() {
   const [lang, setLang] = useState<"de" | "en" | "tr">("de");
   const t = TRANSLATIONS[lang];
 
+    // Mobile-Erkennung
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 600);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+  
   // Darkmode
   const [dark, setDark] = useState(true);
 

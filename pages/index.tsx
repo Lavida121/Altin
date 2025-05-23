@@ -62,15 +62,19 @@ const LANG_FLAGS: { [key in keyof typeof TRANSLATIONS]: string } = {
   tr: "🇹🇷",
 };
 
-// Währungen + Flaggen
+// Währungen + Flaggen (TOP Währungen + Suche später möglich)
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇬🇧" }, // Englische Flagge bei USD
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" }, // USA Flagge bei USD
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
   { code: "JPY", name: { de: "Japanischer Yen", en: "Japanese Yen", tr: "Japon Yeni" }, flag: "🇯🇵" },
   { code: "TRY", name: { de: "Türkische Lira", en: "Turkish Lira", tr: "Türk Lirası" }, flag: "🇹🇷" },
 ];
+
+// Optional: alle Währungen hier als zusätzliche Liste (für Suche erweiterbar)
+// Beispiel: [{code: "AUD", name: {de: "Australischer Dollar", en: "Australian Dollar", tr: "Avustralya Doları"}, flag: "🇦🇺"}, ...]
+// Kann bei Bedarf ergänzt werden
 
 const APP_ID = "c8a594d6cc68451e8734188995aa419e";
 const BASES = ["TRY", "EUR", "USD"];
@@ -132,7 +136,7 @@ export default function Home() {
   }, []);
 
   function copyRate(code: string, rate: number) {
-    const msg = 1 ${code} = ${formatRate(rate)} ${base};
+    const msg = `1 ${code} = ${formatRate(rate)} ${base}`;
     navigator.clipboard.writeText(msg);
   }
 
@@ -159,9 +163,9 @@ export default function Home() {
 
   async function fetchRates(dateStr?: string) {
     setIsLoading(true);
-    let url = https://openexchangerates.org/api/latest.json?app_id=${APP_ID};
+    let url = `https://openexchangerates.org/api/latest.json?app_id=${APP_ID}`;
     if (dateStr && dateStr !== today) {
-      url = https://openexchangerates.org/api/historical/${dateStr}.json?app_id=${APP_ID};
+      url = `https://openexchangerates.org/api/historical/${dateStr}.json?app_id=${APP_ID}`;
     }
     const res = await fetch(url);
     const data = await res.json();
@@ -291,7 +295,7 @@ export default function Home() {
                 boxShadow: lang === l ? "0 2px 10px #7c7cff40" : undefined,
                 transition: "background .22s",
               }}
-              aria-label={Sprache ${l.toUpperCase()}}
+              aria-label={`Sprache ${l.toUpperCase()}`}
             >
               {LANG_FLAGS[l]}
             </button>
@@ -371,7 +375,7 @@ export default function Home() {
                 boxShadow: base === b ? "0 2px 7px #31ffc86b" : undefined,
                 transition: "background .16s",
               }}
-              aria-label={Basiswährung ${b}}
+              aria-label={`Basiswährung ${b}`}
             >
               {b}
             </button>
@@ -575,7 +579,7 @@ export default function Home() {
             <div>
               {isLoading
                 ? t.loading
-                : 1 ${from} = ${formatRate(rates[from] / rates[to])} ${to}}
+                : `1 ${from} = ${formatRate(rates[from] / rates[to])} ${to}`}
             </div>
           </div>
         </div>

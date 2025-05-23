@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// Übersetzungen
+// Sprachdaten
 const TRANSLATIONS = {
   de: {
     appName: "HaremFX",
@@ -55,9 +55,16 @@ const TRANSLATIONS = {
   },
 };
 
+// Sprache + Flaggen für Auswahl
+const LANG_FLAGS: { [key in keyof typeof TRANSLATIONS]: string } = {
+  de: "🇩🇪",
+  en: "🇬🇧",
+  tr: "🇹🇷",
+};
+
 // Währungen + Flaggen
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇬🇧" }, // Englische Flagge statt USA
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇬🇧" }, // Englische Flagge bei USD
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
@@ -96,7 +103,7 @@ function MiniChart({ values, dark }: { values: number[]; dark: boolean }) {
 }
 
 export default function Home() {
-  const [lang, setLang] = useState<"de" | "en" | "tr">("de");
+  const [lang, setLang] = useState<keyof typeof TRANSLATIONS>("de");
   const t = TRANSLATIONS[lang];
   const [dark, setDark] = useState(true);
   const [isFull, setIsFull] = useState(false);
@@ -252,11 +259,21 @@ export default function Home() {
           backdropFilter: "blur(9px)",
           border: dark ? "1.5px solid rgba(144, 135, 234, 0.11)" : "1.5px solid #eceafe",
           transition: "background .3s,border .3s",
+          color,
         }}
       >
         {/* Toolbar */}
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: -8 }}>
-          {(["de", "en", "tr"] as const).map((l) => (
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+            marginBottom: -8,
+            flexWrap: "wrap",
+          }}
+        >
+          {/* Sprache mit Flaggen */}
+          {(Object.keys(LANG_FLAGS) as (keyof typeof LANG_FLAGS)[]).map((l) => (
             <button
               key={l}
               onClick={() => setLang(l)}
@@ -274,12 +291,16 @@ export default function Home() {
                 boxShadow: lang === l ? "0 2px 10px #7c7cff40" : undefined,
                 transition: "background .22s",
               }}
+              aria-label={`Sprache ${l.toUpperCase()}`}
             >
-              {l.toUpperCase()}
+              {LANG_FLAGS[l]}
             </button>
           ))}
+
+          {/* Darkmode */}
           <button
             onClick={() => setDark((d) => !d)}
+            title={t.mode}
             style={{
               marginLeft: 10,
               background: dark ? "#36337c" : "#e7e3ff",
@@ -295,12 +316,14 @@ export default function Home() {
               boxShadow: dark ? "0 2px 9px #222" : undefined,
               transition: "background .23s",
             }}
-            title={t.mode}
           >
             {dark ? "🌙" : "☀️"}
           </button>
+
+          {/* Vollbild */}
           <button
             onClick={isFull ? exitFullscreen : enterFullscreen}
+            title={isFull ? t.exitFullscreen : t.fullscreen}
             style={{
               marginLeft: 7,
               background: dark ? "#29295f" : "#e3e1fb",
@@ -316,11 +339,21 @@ export default function Home() {
               boxShadow: dark ? "0 2px 8px #111" : undefined,
               transition: "background .21s",
             }}
-            title={isFull ? t.exitFullscreen : t.fullscreen}
           >
             {isFull ? "🡸" : "⛶"}
           </button>
-          <span style={{ marginLeft: 17, color: subcolor, fontSize: 15, fontWeight: 600 }}>{t.base}:</span>
+
+          {/* Basis-Währung */}
+          <span
+            style={{
+              marginLeft: 17,
+              color: subcolor,
+              fontSize: 15,
+              fontWeight: 600,
+            }}
+          >
+            {t.base}:
+          </span>
           {BASES.map((b) => (
             <button
               key={b}
@@ -338,25 +371,26 @@ export default function Home() {
                 boxShadow: base === b ? "0 2px 7px #31ffc86b" : undefined,
                 transition: "background .16s",
               }}
+              aria-label={`Basiswährung ${b}`}
             >
               {b}
             </button>
           ))}
         </div>
 
-        {/* Header */}
-        <div style={{ marginBottom: 22, marginTop: 7 }}>
-          <span
-            style={{
-              fontSize: 32,
-              fontWeight: 700,
-              letterSpacing: 1.2,
-              color,
-              textShadow: dark ? "0 2px 8px #3d2f7433" : undefined,
-            }}
-          >
-            {t.appName}
-          </span>
+        {/* Überschrift */}
+        <div
+          style={{
+            marginBottom: 22,
+            marginTop: 7,
+            fontSize: 32,
+            fontWeight: 700,
+            letterSpacing: 1.2,
+            color,
+            textShadow: dark ? "0 2px 8px #3d2f7433" : undefined,
+          }}
+        >
+          {t.appName}
           <span
             style={{
               fontSize: 21,
@@ -391,6 +425,7 @@ export default function Home() {
           >
             {t.calculator}
           </div>
+
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {/* Von */}
             <div style={{ flex: 1, minWidth: 160 }}>

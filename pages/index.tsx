@@ -589,13 +589,13 @@ export default function Home() {
         }}>
           {t.currencyRates} ({base}-Basis)
         </div>
-        <div
+         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
-            gap: 21,
-          }}
-        >
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(180px,1fr))",
+          gap: isMobile ? 11 : 21,
+  }}
+>
           {CURRENCIES.map(currency => (
             <div
               key={currency.code}

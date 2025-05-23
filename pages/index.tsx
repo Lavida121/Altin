@@ -603,12 +603,6 @@ export default function Home() {
                     : blink[currency.code] === "down"
                     ? "2px solid #e12828"
                     : "2px solid transparent",
-                boxShadow:
-                  blink[currency.code] === "up"
-                    ? "0 0 10px 1px #27ff78b5"
-                    : blink[currency.code] === "down"
-                    ? "0 0 10px 1px #ff274ab8"
-                    : "0 4px 18px 0 rgba(67,54,133,0.08)",
                 overflow: "visible",
               }}
             >

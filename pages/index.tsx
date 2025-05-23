@@ -255,11 +255,6 @@ export default function Home() {
         }}
       >
         <div className="innerBox" style={{ background: box, color }}>
-const LANG_FLAGS = {
-  de: "🇩🇪",
-  en: "🇺🇸",
-  tr: "🇹🇷",
-};
           {/* Toolbar */}
           <div className="toolbar">
             {(["de", "en", "tr"] as const).map(l => (

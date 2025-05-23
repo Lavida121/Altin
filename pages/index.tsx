@@ -100,31 +100,8 @@ function MiniChart({ values, dark }: { values: number[]; dark: boolean }) {
   );
 }
 
-const LANG_FLAGS: { [key: string]: string } = {
-  de: "🇩🇪", // Deutschland
-  en: "🇺🇸", // USA
-  tr: "🇹🇷", // Türkei
-};
-
 export default function Home() {
   const [lang, setLang] = useState<"de" | "en" | "tr">("de");
-  const t = TRANSLATIONS[lang];
-
-  return (
-    <div>
-      {(["de", "en", "tr"] as const).map((l) => (
-        <button key={l} onClick={() => setLang(l)}>
-          {LANG_FLAGS[l]} {/* Flagge hier */}
-        </button>
-      ))}
-
-      <h1>{t.appName}</h1>
-      {/* Rest deiner Komponente */}
-    </div>
-  );
-}
-
-  const t = TRANSLATIONS[lang];
   const [dark, setDark] = useState(true);
   const [isFull, setIsFull] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);

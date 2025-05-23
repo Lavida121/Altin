@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Blinken für Kursänderungen */
+.blink-green {
+  animation: blinkGreen 0.5s;
+}
+.blink-red {
+  animation: blinkRed 0.5s;
+}
+
+@keyframes blinkGreen {
+  0% { background-color: #22c55e; }
+  100% { background-color: transparent; }
+}
+@keyframes blinkRed {
+  0% { background-color: #ef4444; }
+  100% { background-color: transparent; }
+}

@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-
+// ...dein gesamter Code von oben...
+export default function Home() {
+  // ...
+}
 // Sprachdaten
 const TRANSLATIONS = {
   de: {

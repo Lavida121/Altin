@@ -92,7 +92,6 @@ const CURRENCIES = [
 
 const APP_ID = "c8a594d6cc68451e8734188995aa419e";
 const BASES = ["TRY", "EUR", "USD"];
-
 const RAPIDAPI_KEY = "3946c9ebe3msh1ff9e0b58cbb0dcp13b2e0jsnfccd1719850f";
 
 const formatRate = (rate: number) => (rate >= 10 ? rate.toFixed(3) : rate.toFixed(4));
@@ -159,11 +158,13 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Copy rate to clipboard
   function copyRate(code: string, rate: number) {
     const msg = `1 ${code} = ${formatRate(rate)} ${base}`;
     navigator.clipboard.writeText(msg);
   }
 
+  // Fullscreen functions
   function enterFullscreen() {
     if (rootRef.current?.requestFullscreen) {
       rootRef.current.requestFullscreen();
@@ -185,6 +186,7 @@ export default function Home() {
     };
   }, []);
 
+  // Fetch exchange rates
   async function fetchRates(dateStr?: string) {
     setIsLoading(true);
     let url = `https://openexchangerates.org/api/latest.json?app_id=${APP_ID}`;
@@ -226,6 +228,7 @@ export default function Home() {
     setIsLoading(false);
   }
 
+  // Fetch gold prices from RapidAPI
   async function fetchGoldPrices() {
     setLoadingGold(true);
     setErrorGold("");
@@ -246,13 +249,14 @@ export default function Home() {
         { name: t.silver, price: data.rates.XAG, currency: data.base },
       ];
       setGoldData(items);
-    } catch {
+    } catch (error) {
       setErrorGold(t.errorLoading);
     } finally {
       setLoadingGold(false);
     }
   }
 
+  // Load data
   useEffect(() => {
     fetchRates(date);
     fetchGoldPrices();
@@ -263,6 +267,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [date, base, activeTab]);
 
+  // Calculate conversion result
   useEffect(() => {
     if (!rates[from] || !rates[to]) {
       setToValue("");
@@ -274,12 +279,14 @@ export default function Home() {
     else setToValue((fVal * result).toFixed(4));
   }, [fromValue, from, to, rates]);
 
+  // Swap currencies
   function swap() {
     setFrom(to);
     setTo(from);
     setFromValue(toValue || "1");
   }
 
+  // Styling vars
   const bg = dark
     ? "radial-gradient(ellipse at 70% 0,#232141 0,#28246b 70%,#141228 100%)"
     : "radial-gradient(ellipse at 80% 0,#f1f1ff 0,#e0e0ff 80%,#f7f9fc 100%)";
@@ -321,17 +328,62 @@ export default function Home() {
           color,
         }}
       >
-        {/* Toolbar */}
+        {/* Toolbar mit Tabs und Sprachen */}
         <div
           style={{
             display: "flex",
             gap: 12,
             alignItems: "center",
-            marginBottom: -8,
+            marginBottom: 16,
             flexWrap: "wrap",
+            justifyContent: "center",
           }}
         >
-          {/* Sprache mit Flaggen */}
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => setActiveTab("currencies")}
+              style={{
+                background: activeTab === "currencies" ? "#6865ff" : "rgba(225,225,245,0.13)",
+                color: dark ? "#fff" : "#312e67",
+                border: "none",
+                padding: "6px 16px",
+                borderRadius: 12,
+                fontWeight: 600,
+                fontSize: 16,
+                cursor: "pointer",
+                outline: "none",
+                letterSpacing: 1,
+                boxShadow: activeTab === "currencies" ? "0 2px 10px #7c7cff40" : undefined,
+                transition: "background .22s",
+              }}
+              aria-label={t.currenciesTab}
+            >
+              {t.currenciesTab}
+            </button>
+            <button
+              onClick={() => setActiveTab("metals")}
+              style={{
+                background: activeTab === "metals" ? "#6865ff" : "rgba(225,225,245,0.13)",
+                color: dark ? "#fff" : "#312e67",
+                border: "none",
+                padding: "6px 16px",
+                borderRadius: 12,
+                fontWeight: 600,
+                fontSize: 16,
+                cursor: "pointer",
+                outline: "none",
+                letterSpacing: 1,
+                boxShadow: activeTab === "metals" ? "0 2px 10px #7c7cff40" : undefined,
+                transition: "background .22s",
+              }}
+              aria-label={t.metalsTab}
+            >
+              {t.metalsTab}
+            </button>
+          </div>
+
+          {/* Sprachen */}
           {(Object.keys(LANG_FLAGS) as (keyof typeof LANG_FLAGS)[]).map((l) => (
             <button
               key={l}
@@ -435,49 +487,6 @@ export default function Home() {
               {b}
             </button>
           ))}
-
-          {/* Tab Wechsel */}
-          <button
-            onClick={() => setActiveTab("currencies")}
-            style={{
-              marginLeft: 30,
-              background: activeTab === "currencies" ? "#6865ff" : "rgba(225,225,245,0.13)",
-              color: dark ? "#fff" : "#312e67",
-              border: "none",
-              padding: "6px 16px",
-              borderRadius: 12,
-              fontWeight: 600,
-              fontSize: 16,
-              cursor: "pointer",
-              outline: "none",
-              letterSpacing: 1,
-              boxShadow: activeTab === "currencies" ? "0 2px 10px #7c7cff40" : undefined,
-              transition: "background .22s",
-            }}
-            aria-label={t.currenciesTab}
-          >
-            {t.currenciesTab}
-          </button>
-          <button
-            onClick={() => setActiveTab("metals")}
-            style={{
-              background: activeTab === "metals" ? "#6865ff" : "rgba(225,225,245,0.13)",
-              color: dark ? "#fff" : "#312e67",
-              border: "none",
-              padding: "6px 16px",
-              borderRadius: 12,
-              fontWeight: 600,
-              fontSize: 16,
-              cursor: "pointer",
-              outline: "none",
-              letterSpacing: 1,
-              boxShadow: activeTab === "metals" ? "0 2px 10px #7c7cff40" : undefined,
-              transition: "background .22s",
-            }}
-            aria-label={t.metalsTab}
-          >
-            {t.metalsTab}
-          </button>
         </div>
 
         {/* Überschrift */}
@@ -507,19 +516,20 @@ export default function Home() {
         </div>
 
         {/* Inhalte je nach aktivem Tab */}
-        {activeTab === "currencies" && (
-          <>
-            {/* Währungsrechner */}
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+          {activeTab === "currencies" && (
             <div
               style={{
+                flex: 1,
+                minWidth: 320,
                 background: card,
                 borderRadius: 15,
                 boxShadow: "0 2px 13px 0 rgba(62,56,110,0.06)",
                 padding: "14px 15px 12px 15px",
-                marginBottom: 28,
                 color,
               }}
             >
+              {/* Währungsrechner */}
               <div
                 style={{
                   fontSize: 17,
@@ -683,168 +693,171 @@ export default function Home() {
                     : `1 ${from} = ${formatRate(rates[from] / rates[to])} ${to}`}
                 </div>
               </div>
-            </div>
 
-            {/* Wechselkurse Übersicht */}
-            <div
-              style={{
-                color: subcolor,
-                fontSize: isMobile ? 15 : 17,
-                fontWeight: 600,
-                letterSpacing: 0.3,
-                marginBottom: isMobile ? 14 : 11,
-              }}
-            >
-              {t.currencyRates} ({base}-Basis)
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(180px,1fr))",
-                gap: isMobile ? 11 : 21,
-              }}
-            >
-              {CURRENCIES.map((currency) => (
-                <div
-                  key={currency.code}
-                  style={{
-                    background: card,
-                    borderRadius: 14,
-                    boxShadow: "0 4px 18px 0 rgba(67,54,133,0.08)",
-                    padding: "15px 11px 11px 11px",
-                    minHeight: 75,
-                    position: "relative",
-                    transition: "box-shadow 0.2s",
-                    overflow: "visible",
-                    color,
-                    border:
-                      blink[currency.code] === "up"
-                        ? "2px solid #28e15c"
-                        : blink[currency.code] === "down"
-                        ? "2px solid #e12828"
-                        : "2px solid transparent",
-                  }}
-                >
+              {/* Wechselkurse Übersicht */}
+              <div
+                style={{
+                  color: subcolor,
+                  fontSize: isMobile ? 15 : 17,
+                  fontWeight: 600,
+                  letterSpacing: 0.3,
+                  marginTop: 20,
+                  marginBottom: isMobile ? 14 : 11,
+                }}
+              >
+                {t.currencyRates} ({base}-Basis)
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(180px,1fr))",
+                  gap: isMobile ? 11 : 21,
+                }}
+              >
+                {CURRENCIES.map((currency) => (
                   <div
+                    key={currency.code}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      fontWeight: 700,
-                      fontSize: isMobile ? 16 : 18,
-                      marginBottom: 3,
+                      background: card,
+                      borderRadius: 14,
+                      boxShadow: "0 4px 18px 0 rgba(67,54,133,0.08)",
+                      padding: "15px 11px 11px 11px",
+                      minHeight: 75,
+                      position: "relative",
+                      transition: "box-shadow 0.2s",
+                      overflow: "visible",
+                      color,
+                      border:
+                        blink[currency.code] === "up"
+                          ? "2px solid #28e15c"
+                          : blink[currency.code] === "down"
+                          ? "2px solid #e12828"
+                          : "2px solid transparent",
                     }}
                   >
-                    <span
+                    <div
                       style={{
-                        fontSize: isMobile ? 20 : 23,
-                        marginRight: 7,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 700,
+                        fontSize: isMobile ? 16 : 18,
+                        marginBottom: 3,
                       }}
                     >
-                      {currency.flag}
-                    </span>
-                    {currency.code}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: isMobile ? 12 : 13,
-                      color: subcolor,
-                      marginBottom: isMobile ? 3 : 5,
-                    }}
-                  >
-                    {currency.name[lang]}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: isMobile ? 16 : 19,
-                      fontWeight: 600,
-                      letterSpacing: 0.3,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 5,
-                      minHeight: 21,
-                      transition: "color 0.3s",
-                      marginBottom: 2,
-                    }}
-                  >
-                    {rates[currency.code] ? formatRate(rates[currency.code]) : "--"}
-                    <button
-                      onClick={() => copyRate(currency.code, rates[currency.code])}
-                      title={t.copy}
+                      <span
+                        style={{
+                          fontSize: isMobile ? 20 : 23,
+                          marginRight: 7,
+                        }}
+                      >
+                        {currency.flag}
+                      </span>
+                      {currency.code}
+                    </div>
+                    <div
                       style={{
                         fontSize: isMobile ? 12 : 13,
-                        background: dark ? "rgba(244,244,255,0.09)" : "#eceafe",
-                        color: dark ? "#d5d3f9" : "#665db9",
-                        border: "none",
-                        borderRadius: 6,
-                        marginLeft: 1,
-                        cursor: "pointer",
-                        padding: "2px 7px",
+                        color: subcolor,
+                        marginBottom: isMobile ? 3 : 5,
                       }}
                     >
-                      📋
-                    </button>
+                      {currency.name[lang]}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: isMobile ? 16 : 19,
+                        fontWeight: 600,
+                        letterSpacing: 0.3,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        minHeight: 21,
+                        transition: "color 0.3s",
+                        marginBottom: 2,
+                      }}
+                    >
+                      {rates[currency.code] ? formatRate(rates[currency.code]) : "--"}
+                      <button
+                        onClick={() => copyRate(currency.code, rates[currency.code])}
+                        title={t.copy}
+                        style={{
+                          fontSize: isMobile ? 12 : 13,
+                          background: dark ? "rgba(244,244,255,0.09)" : "#eceafe",
+                          color: dark ? "#d5d3f9" : "#665db9",
+                          border: "none",
+                          borderRadius: 6,
+                          marginLeft: 1,
+                          cursor: "pointer",
+                          padding: "2px 7px",
+                        }}
+                      >
+                        📋
+                      </button>
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: 7,
+                        bottom: 6,
+                      }}
+                    >
+                      <MiniChart values={history[currency.code] || []} dark={dark} />
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 7,
-                      bottom: 6,
-                    }}
-                  >
-                    <MiniChart values={history[currency.code] || []} dark={dark} />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </>
-        )}
+          )}
 
-        {activeTab === "metals" && (
-          <div
-            style={{
-              background: card,
-              borderRadius: 15,
-              boxShadow: "0 2px 13px 0 rgba(62,56,110,0.06)",
-              padding: 20,
-              color,
-              minHeight: 200,
-            }}
-          >
+          {activeTab === "metals" && (
             <div
               style={{
-                fontSize: 17,
-                fontWeight: 600,
-                marginBottom: 15,
-                letterSpacing: 0.5,
+                flex: 1,
+                minWidth: 320,
+                background: card,
+                borderRadius: 15,
+                boxShadow: "0 2px 13px 0 rgba(62,56,110,0.06)",
+                padding: 20,
+                color,
+                minHeight: 200,
               }}
             >
-              {t.metalsTab}
-            </div>
-            {loadingGold ? (
-              <div>{t.loading}</div>
-            ) : errorGold ? (
-              <div>{errorGold}</div>
-            ) : (
-              goldData.map((item) => (
-                <div
-                  key={item.name}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "10px 15px",
-                    fontSize: 16,
-                    borderBottom: "1px solid rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <div>{item.name}</div>
-                  <div>
-                    {item.price} {item.currency}
+              <div
+                style={{
+                  fontSize: 17,
+                  fontWeight: 600,
+                  marginBottom: 15,
+                  letterSpacing: 0.5,
+                }}
+              >
+                {t.metalsTab}
+              </div>
+              {loadingGold ? (
+                <div>{t.loading}</div>
+              ) : errorGold ? (
+                <div>{errorGold}</div>
+              ) : (
+                goldData.map((item) => (
+                  <div
+                    key={item.name}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      padding: "10px 15px",
+                      fontSize: 16,
+                      borderBottom: "1px solid rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <div>{item.name}</div>
+                    <div>
+                      {item.price} {item.currency}
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+                ))
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
         <div

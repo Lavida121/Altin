@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// Sprachdaten
+// Übersetzungen
 const TRANSLATIONS = {
   de: {
     appName: "HaremFX",
@@ -55,9 +55,9 @@ const TRANSLATIONS = {
   },
 };
 
-// Währungen & Flaggen
+// Währungen + Flaggen
 const CURRENCIES = [
-  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇬🇧" }, // Englische Flagge hier
+  { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇬🇧" }, // Englische Flagge statt USA
   { code: "EUR", name: { de: "Euro", en: "Euro", tr: "Euro" }, flag: "🇪🇺" },
   { code: "GBP", name: { de: "Pfund Sterling", en: "Pound Sterling", tr: "İngiliz Sterlini" }, flag: "🇬🇧" },
   { code: "CHF", name: { de: "Schweizer Franken", en: "Swiss Franc", tr: "İsviçre Frangı" }, flag: "🇨🇭" },
@@ -65,7 +65,7 @@ const CURRENCIES = [
   { code: "TRY", name: { de: "Türkische Lira", en: "Turkish Lira", tr: "Türk Lirası" }, flag: "🇹🇷" },
 ];
 
-const APP_ID = "c8a594d6cc68451e8734188995aa419e"; // OpenExchangeRates Key
+const APP_ID = "c8a594d6cc68451e8734188995aa419e";
 const BASES = ["TRY", "EUR", "USD"];
 
 const formatRate = (rate: number) => (rate >= 10 ? rate.toFixed(3) : rate.toFixed(4));
@@ -116,7 +116,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
-  // Mobile-Erkennung
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 600);
@@ -154,7 +153,7 @@ export default function Home() {
   async function fetchRates(dateStr?: string) {
     setIsLoading(true);
     let url = `https://openexchangerates.org/api/latest.json?app_id=${APP_ID}`;
-    if (dateStr && dateStr !== new Date().toISOString().split("T")[0]) {
+    if (dateStr && dateStr !== today) {
       url = `https://openexchangerates.org/api/historical/${dateStr}.json?app_id=${APP_ID}`;
     }
     const res = await fetch(url);
@@ -192,14 +191,12 @@ export default function Home() {
     setIsLoading(false);
   }
 
-  // Automatisches Update alle 2 Sekunden
   useEffect(() => {
     fetchRates(date);
     const interval = setInterval(() => fetchRates(date), 2000);
     return () => clearInterval(interval);
   }, [date, base]);
 
-  // Währungsrechner berechnen
   useEffect(() => {
     if (!rates[from] || !rates[to]) {
       setToValue("");
@@ -257,9 +254,8 @@ export default function Home() {
           transition: "background .3s,border .3s",
         }}
       >
-        {/* Toolbar: Sprache, Modus, Vollbild, Basisauswahl */}
+        {/* Toolbar */}
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: -8 }}>
-          {/* Sprache */}
           {(["de", "en", "tr"] as const).map((l) => (
             <button
               key={l}
@@ -282,7 +278,6 @@ export default function Home() {
               {l.toUpperCase()}
             </button>
           ))}
-          {/* Dark/Lightmode */}
           <button
             onClick={() => setDark((d) => !d)}
             style={{
@@ -304,7 +299,6 @@ export default function Home() {
           >
             {dark ? "🌙" : "☀️"}
           </button>
-          {/* Vollbild */}
           <button
             onClick={isFull ? exitFullscreen : enterFullscreen}
             style={{
@@ -326,7 +320,6 @@ export default function Home() {
           >
             {isFull ? "🡸" : "⛶"}
           </button>
-          {/* Basis-Währung */}
           <span style={{ marginLeft: 17, color: subcolor, fontSize: 15, fontWeight: 600 }}>{t.base}:</span>
           {BASES.map((b) => (
             <button
@@ -351,7 +344,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Überschrift */}
+        {/* Header */}
         <div style={{ marginBottom: 22, marginTop: 7 }}>
           <span
             style={{

@@ -55,6 +55,13 @@ const TRANSLATIONS = {
   },
 };
 
+// Flaggen für Sprachauswahl
+const LANG_FLAGS: { [key: string]: string } = {
+  de: "🇩🇪",
+  en: "🇺🇸",
+  tr: "🇹🇷",
+};
+
 // Währungen & Flaggen
 const CURRENCIES = [
   { code: "USD", name: { de: "US-Dollar", en: "US Dollar", tr: "ABD Doları" }, flag: "🇺🇸" },
@@ -264,7 +271,7 @@ export default function Home() {
                 className={lang === l ? "active" : ""}
                 aria-label={`Sprache ${l.toUpperCase()}`}
               >
-                {l.toUpperCase()}
+                {LANG_FLAGS[l]}
               </button>
             ))}
             <button onClick={() => setDark(d => !d)} title={t.mode} className="darkToggle">
@@ -575,7 +582,7 @@ export default function Home() {
           display: flex;
           gap: 8px;
           margin-top: 7px;
-          align-items: center;
+          align-items: "center";
           flex-wrap: wrap;
           color: ${subcolor};
           font-size: 13px;
